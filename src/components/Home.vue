@@ -33,6 +33,8 @@
         },
         methods: {
             onClick(item) {
+                this.curve =
+                 this.curve === 'curveStepAfter' ? 'curveStepBefore' : 'curveStepAfter'
                 console.log('hey you', item)
             }
         },
@@ -51,6 +53,10 @@
 
 </script>
 
-<style>
+<style scoped>
+    path {
+        transition: all 500ms ease;
+
+    }
 
 </style>
