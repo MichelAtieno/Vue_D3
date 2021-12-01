@@ -16,6 +16,35 @@
                     transform="translate(350, 320)"
                     @click="onClick(item)" />
         </svg>
+        <div style="margin-top: 20px;">
+            <input v-model.number="a">
+            <br>
+            <br>
+            <input v-model.number="b">
+            <h2>The sum is {{ c }}</h2>
+            <h4>Reduced {{ reduced }}</h4>
+        </div>
+
+        <svg width="800"
+             height="500"
+             @click="addPoint" 
+             @contextmenu.prevent="points = []" >
+
+            <path stroke="green"
+                  fill="none"
+                  stroke-width="5"
+                  :d="e"
+                  transform="translate(0, -450)"   />
+            
+            <circle v-for="(item, index) in points"
+                    :key="index"
+                    r="10"
+                    :cx="item.x"
+                    :cy="item.y"
+                    fill="#000"
+                    transform="translate(0, -450)"
+                    />
+        </svg>
     </div>
 
 
@@ -24,11 +53,23 @@
 <script>
     import * as d3 from 'd3'
     import dataset from './dataset'
+    
+
     export default {
         data() {
             return {
                 dataset,
-                curve: 'curveNatural'
+                curve: 'curveNatural',
+                a: 0,
+                b: 0,
+                reduced: 0,
+
+                points: [
+                    {
+                        x: 200,
+                        y: 500
+                    }
+                ]
             }
         },
         methods: {
@@ -36,7 +77,26 @@
                 this.curve =
                  this.curve === 'curveStepAfter' ? 'curveStepBefore' : 'curveStepAfter'
                 console.log('hey you', item)
+            },
+            subtract() {
+                this.reduced -= .1
+
+                if (this.reduced > .001) {
+                    requestAnimationFrame(this.subtract)
+                } else {
+                    this.reduced = 0
+                }
+            },
+            addPoint(ev) {
+                const {
+                    layerX: x,
+                    layerY: y
+                } = ev
+                this.points.push({
+                    x,y
+                })
             }
+
         },
         computed: {
             lineGenerator() {
@@ -47,6 +107,25 @@
             },
             d() {
                 return this.lineGenerator(this.dataset)
+            },
+            c() {
+                return this.a + this.b
+            },
+            newlineGenerator() {
+                return d3.line()
+                .x(item => item.x)
+                .y(item => item.y)
+
+            },
+            e() {
+                return this.newlineGenerator(this.points)
+            }
+
+        },
+        watch: {
+            c(val) {
+                this.reduced = val 
+                this.subtract()
             }
         }
     }
