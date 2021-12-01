@@ -1,5 +1,6 @@
 <template>
-   
+    <div style="width: 100%; height: 100%;">
+        <input type="text" v-model="curve" />
         <svg width="800" height="500">
             <path stroke="green"
                   fill="none"
@@ -15,7 +16,7 @@
                     transform="translate(350, 320)"
                     @click="onClick(item)" />
         </svg>
-   
+    </div>
 
 
 </template>
@@ -26,7 +27,8 @@
     export default {
         data() {
             return {
-                dataset
+                dataset,
+                curve: 'curveNatural'
             }
         },
         methods: {
@@ -37,6 +39,7 @@
         computed: {
             lineGenerator() {
                 return d3.line()
+                         .curve(d3[this.curve])
                          .x(v => v[0])
                          .y(v => v[1])   
             },
