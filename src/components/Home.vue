@@ -45,6 +45,18 @@
                     transform="translate(0, -450)"
                     />
         </svg>
+
+        <svg width="800"
+             height="500">
+             <circle v-for="(item, index) in h.descendants()"
+                    :key="index"
+                    r="item.r"
+                    :cx="item.x"
+                    :cy="item.y"
+                    fill="#000"
+                    transform="translate(0, -450)"
+                    />
+        </svg>
     </div>
 
 
@@ -69,9 +81,17 @@
                         x: 200,
                         y: 500
                     }
-                ]
+                ],
+
+                width: 100,
+                height: 100,
+                padding: 2,
+                h: d3.hierarchy({}),
+                groupOrder: ['region', 'subregion'],
+                new_dataset: []
             }
         },
+       
         methods: {
             onClick(item) {
                 this.curve =
@@ -95,9 +115,19 @@
                 this.points.push({
                     x,y
                 })
+            },
+            updateSize() {
+                const {
+                    width,
+                    height
+                } = this.$el.getBoundingClientRect()
+
+                this.width = width
+                this.height = height
             }
 
         },
+
         computed: {
             lineGenerator() {
                 return d3.line()
@@ -115,19 +145,62 @@
                 return d3.line()
                 .x(item => item.x)
                 .y(item => item.y)
+                .curve(d3.curveCardinalClosed)
 
             },
             e() {
                 return this.newlineGenerator(this.points)
+            },
+
+            layout() {
+                return d3.pack()
+                         .size([this.width, this.height])
+                         .padding(this.padding)
+            },
+            nester() {
+                const n = d3.nest()
+                this.groupOrder.forEach(val => {
+                    n.key(node => node[val])
+                })
+
+                return n
+            },
+            nestedData() {
+                return {
+                    key: 'root',
+                    values: this.nester.entries(this.new_dataset)
+                }
             }
 
         },
+
         watch: {
             c(val) {
                 this.reduced = val 
                 this.subtract()
+            },
+            layout() {
+                this.layout(this.h)
+            },
+            nestedData(val) {
+                const h = d3.hierarchy(val, z => z.values)
+            
+                h.sum(z => z.value)
+                h.sort((g,i) => d3.ascending(g.value, i.value ))
+            
+                this.layout(h)
+                this.h = h
             }
-        }
+        },
+        async mounted() {
+            //1. Update Size
+            this.updateSize()
+            //2. Load data
+            const new_data = await d3.json('./populations.json')
+            //3. Apply the data as read only to our dataset
+            this.new_dataset = Object.freeze(new_data)
+        },
+        
     }
 
 </script>
